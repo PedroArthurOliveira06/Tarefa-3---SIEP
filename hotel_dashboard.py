@@ -58,13 +58,13 @@ st.markdown("""
 # Header
 st.title("🏨 Dashboard de Previsão de Cancelamentos")
 st.markdown("### Tarefa 3 - Modelagem com Machine Learning")
-st.markdown("**Aluno:** Pedro Arthur Santos Oliveira | **Matrícula:** 231036069")
+st.markdown("*Aluno:* Pedro Arthur Santos Oliveira | *Matrícula:* 231036069")
 st.markdown("---")
 
 # Sidebar
 with st.sidebar:
     st.image("https://via.placeholder.com/300x100/3498db/ffffff?text=UnB", use_container_width=True)
-    st.header("⚙️ Configurações")
+    st.header("⚙ Configurações")
     
     # Upload de arquivo
     st.subheader("📁 Upload do Dataset")
@@ -122,6 +122,103 @@ def prepare_features(df):
     df_encoded = pd.get_dummies(df_model, columns=categorical_features, drop_first=True)
     
     return df_encoded
+
+def display_results(y_test, y_pred, y_pred_proba, training_time, model_name):
+    """Exibe resultados do modelo"""
+    st.markdown(f"### 📊 Resultados - {model_name}")
+    
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    with col1:
+        st.metric("AUC", f"{roc_auc_score(y_test, y_pred_proba):.4f}")
+    with col2:
+        st.metric("F1-Score", f"{f1_score(y_test, y_pred):.4f}")
+    with col3:
+        st.metric("Precisão", f"{precision_score(y_test, y_pred):.4f}")
+    with col4:
+        st.metric("Recall", f"{recall_score(y_test, y_pred):.4f}")
+    with col5:
+        st.metric("Tempo", f"{training_time:.2f}s")
+    
+    # Interpretação
+    auc_score = roc_auc_score(y_test, y_pred_proba)
+    f1 = f1_score(y_test, y_pred)
+    
+    if auc_score > 0.85:
+        performance = "🟢 Excelente"
+    elif auc_score > 0.75:
+        performance = "🟡 Bom"
+    else:
+        performance = "🔴 Regular"
+    
+    st.info(f"""
+    *Performance:* {performance}
+    
+    O modelo alcançou um AUC de {auc_score:.4f}, indicando {"excelente" if auc_score > 0.85 else "boa" if auc_score > 0.75 else "regular"} capacidade de discriminação entre cancelamentos e não-cancelamentos.
+    """)
+
+def plot_roc_curve(y_test, y_pred_proba, model_name):
+    """Plota a curva ROC"""
+    fpr, tpr, thresholds = roc_curve(y_test, y_pred_proba)
+    auc_score = roc_auc_score(y_test, y_pred_proba)
+    
+    fig = go.Figure()
+    
+    fig.add_trace(go.Scatter(
+        x=fpr, y=tpr,
+        name=f'{model_name} (AUC = {auc_score:.4f})',
+        line=dict(color='#3498db', width=3)
+    ))
+    
+    fig.add_trace(go.Scatter(
+        x=[0, 1], y=[0, 1],
+        name='Baseline (AUC = 0.50)',
+        line=dict(color='gray', width=2, dash='dash')
+    ))
+    
+    fig.update_layout(
+        title=f'Curva ROC - {model_name}',
+        xaxis_title='Taxa de Falsos Positivos',
+        yaxis_title='Taxa de Verdadeiros Positivos',
+        height=500,
+        hovermode='closest'
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+
+def plot_confusion_matrix(y_test, y_pred, model_name):
+    """Plota a matriz de confusão"""
+    cm = confusion_matrix(y_test, y_pred)
+    
+    fig = go.Figure(data=go.Heatmap(
+        z=cm,
+        x=['Não Cancelou', 'Cancelou'],
+        y=['Não Cancelou', 'Cancelou'],
+        colorscale='Blues',
+        text=cm,
+        texttemplate='%{text}',
+        textfont={"size": 20},
+        showscale=True
+    ))
+    
+    fig.update_layout(
+        title=f'Matriz de Confusão - {model_name}',
+        xaxis_title='Predito',
+        yaxis_title='Real',
+        height=500
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Análise da matriz
+    tn, fp, fn, tp = cm.ravel()
+    st.markdown(f"""
+    *Análise da Matriz de Confusão:*
+    - ✅ *Verdadeiros Negativos:* {tn:,} (Não cancelou e previsto corretamente)
+    - ❌ *Falsos Positivos:* {fp:,} (Não cancelou mas previsto como cancelamento)
+    - ❌ *Falsos Negativos:* {fn:,} (Cancelou mas previsto como não cancelamento)
+    - ✅ *Verdadeiros Positivos:* {tp:,} (Cancelou e previsto corretamente)
+    """)
 
 # Função principal
 def main():
@@ -259,7 +356,7 @@ def main():
         
         # Parâmetros específicos por algoritmo
         if algorithm == "Regressão Logística":
-            st.subheader("⚙️ Parâmetros - Regressão Logística")
+            st.subheader("⚙ Parâmetros - Regressão Logística")
             
             col1, col2 = st.columns(2)
             with col1:
@@ -297,7 +394,7 @@ def main():
                     plot_confusion_matrix(y_test, y_pred, "Regressão Logística")
         
         elif algorithm == "KNN":
-            st.subheader("⚙️ Parâmetros - K-Nearest Neighbors")
+            st.subheader("⚙ Parâmetros - K-Nearest Neighbors")
             
             col1, col2 = st.columns(2)
             with col1:
@@ -334,7 +431,7 @@ def main():
                     plot_confusion_matrix(y_test, y_pred, f"KNN (k={k})")
         
         elif algorithm == "SVM":
-            st.subheader("⚙️ Parâmetros - Support Vector Machine")
+            st.subheader("⚙ Parâmetros - Support Vector Machine")
             
             col1, col2 = st.columns(2)
             with col1:
@@ -345,7 +442,7 @@ def main():
                 degree = st.slider("Grau (Poly)", 2, 5, 3) if kernel == 'poly' else 3
             
             # Aviso sobre tempo de treinamento
-            st.warning("⚠️ SVM pode levar vários minutos para treinar. Seja paciente!")
+            st.warning("⚠ SVM pode levar vários minutos para treinar. Seja paciente!")
             
             if st.button("🚀 Treinar SVM", type="primary"):
                 with st.spinner("Treinando modelo... Isso pode levar alguns minutos."):
@@ -363,7 +460,7 @@ def main():
                         probability=True,
                         random_state=42
                     )
-                    model.fit(X_train_final[indices], y_train_final[indices])
+                    model.fit(X_train_final[indices], y_train_final.iloc[indices] if hasattr(y_train_final, 'iloc') else y_train_final[indices])
                     
                     y_pred = model.predict(X_test_scaled)
                     y_pred_proba = model.predict_proba(X_test_scaled)[:, 1]
@@ -438,7 +535,7 @@ def main():
                     sample_size = min(15000, len(X_train_final))
                     indices = np.random.choice(len(X_train_final), sample_size, replace=False)
                     svm = SVC(kernel='rbf', probability=True, random_state=42)
-                    svm.fit(X_train_final[indices], y_train_final[indices])
+                    svm.fit(X_train_final[indices], y_train_final.iloc[indices] if hasattr(y_train_final, 'iloc') else y_train_final[indices])
                     y_pred_svm = svm.predict(X_test_scaled)
                     y_proba_svm = svm.predict_proba(X_test_scaled)[:, 1]
                     time_svm = time.time() - start
@@ -525,15 +622,15 @@ def main():
                 # Interpretação automática
                 st.markdown("### 🤖 Interpretação Automática")
                 st.info(f"""
-                **Melhor Modelo: {best_model['Modelo']}**
+                *Melhor Modelo: {best_model['Modelo']}*
                 
-                - 📊 **AUC:** {best_model['AUC']:.4f} - {"Excelente" if best_model['AUC'] > 0.85 else "Bom" if best_model['AUC'] > 0.75 else "Regular"} poder discriminatório
-                - 🎯 **F1-Score:** {best_model['F1-Score']:.4f} - Balanço entre precisão e recall
-                - ✅ **Precisão:** {best_model['Precisão']:.4f} - {best_model['Precisão']*100:.1f}% dos cancelamentos previstos são corretos
-                - 📍 **Recall:** {best_model['Recall']:.4f} - Detecta {best_model['Recall']*100:.1f}% dos cancelamentos reais
-                - ⏱️ **Tempo:** {best_model['Tempo (s)']:.2f}s - {"Rápido" if best_model['Tempo (s)'] < 5 else "Moderado" if best_model['Tempo (s)'] < 30 else "Lento"}
+                - 📊 *AUC:* {best_model['AUC']:.4f} - {"Excelente" if best_model['AUC'] > 0.85 else "Bom" if best_model['AUC'] > 0.75 else "Regular"} poder discriminatório
+                - 🎯 *F1-Score:* {best_model['F1-Score']:.4f} - Balanço entre precisão e recall
+                - ✅ *Precisão:* {best_model['Precisão']:.4f} - {best_model['Precisão']*100:.1f}% dos cancelamentos previstos são corretos
+                - 📍 *Recall:* {best_model['Recall']:.4f} - Detecta {best_model['Recall']*100:.1f}% dos cancelamentos reais
+                - ⏱ *Tempo:* {best_model['Tempo (s)']:.2f}s - {"Rápido" if best_model['Tempo (s)'] < 5 else "Moderado" if best_model['Tempo (s)'] < 30 else "Lento"}
                 
-                **Recomendação:** Este modelo é ideal para implantação em produção devido ao seu {"excelente desempenho e eficiência" if best_model['AUC'] > 0.85 and best_model['Tempo (s)'] < 10 else "bom desempenho geral"}.
+                *Recomendação:* Este modelo é ideal para implantação em produção devido ao seu {"excelente desempenho e eficiência" if best_model['AUC'] > 0.85 and best_model['Tempo (s)'] < 10 else "bom desempenho geral"}.
                 """)
     
     # TAB 3: Comparação Detalhada
@@ -548,27 +645,27 @@ def main():
         st.markdown("""
         ### 🎯 Principais Descobertas
         
-        **1. Fatores de Maior Impacto no Cancelamento:**
-        - **Lead Time:** Reservas com antecedência > 180 dias têm 65% mais chance de cancelamento
-        - **Tipo de Depósito:** Reservas sem depósito têm 3x mais probabilidade de cancelamento
-        - **Tipo de Cliente:** Clientes transitórios cancelam 45% mais que contratos
-        - **Histórico:** Clientes com cancelamentos anteriores têm 5x mais chance de cancelar novamente
+        *1. Fatores de Maior Impacto no Cancelamento:*
+        - *Lead Time:* Reservas com antecedência > 180 dias têm 65% mais chance de cancelamento
+        - *Tipo de Depósito:* Reservas sem depósito têm 3x mais probabilidade de cancelamento
+        - *Tipo de Cliente:* Clientes transitórios cancelam 45% mais que contratos
+        - *Histórico:* Clientes com cancelamentos anteriores têm 5x mais chance de cancelar novamente
         
         ### 📊 Recomendações Operacionais
         
-        **Para o Hotel:**
+        *Para o Hotel:*
         """)
         
         col1, col2 = st.columns(2)
         
         with col1:
             st.markdown("""
-            **🎫 Política de Overbooking:**
+            *🎫 Política de Overbooking:*
             - Implementar overbooking de 5-8% em períodos de alta sazonalidade
             - Focar em reservas com lead time < 7 dias
             - Priorizar segmentos corporativos
             
-            **💰 Ofertas Direcionadas:**
+            *💰 Ofertas Direcionadas:*
             - Desconto de 10-15% para clientes com alto risco
             - Programa de fidelidade para reduzir cancelamentos
             - Upgrade de quarto como incentivo
@@ -576,12 +673,12 @@ def main():
         
         with col2:
             st.markdown("""
-            **🔒 Políticas de Depósito:**
+            *🔒 Políticas de Depósito:*
             - Exigir depósito de 20% para lead time > 60 dias
             - Depósito de 50% para lead time > 120 dias
             - Política mais flexível para clientes corporativos
             
-            **📧 Comunicação Proativa:**
+            *📧 Comunicação Proativa:*
             - Email 7 dias antes da chegada
             - SMS 48h antes para confirmação
             - Oferta de cancelamento gratuito até 24h
@@ -590,41 +687,34 @@ def main():
         st.markdown("""
         ### 🎓 Análise dos Modelos
         
-        **Regressão Logística:**
+        *Regressão Logística:*
         - ✅ Alta interpretabilidade
         - ✅ Rápido treinamento
         - ✅ Bom para identificar fatores de risco
-        - ⚠️ Assume linearidade
+        - ⚠ Assume linearidade
         
-        **KNN:**
+        *KNN:*
         - ✅ Captura padrões locais
         - ✅ Não assume distribuição
-        - ⚠️ Sensível a escala
-        - ⚠️ Lento em produção
+        - ⚠ Sensível a escala
+        - ⚠ Lento em produção
         
-        **SVM:**
+        *SVM:*
         - ✅ Melhor performance geral
         - ✅ Captura não-linearidades
         - ✅ Robusto a outliers
-        - ⚠️ Treinamento demorado
-        - ⚠️ Difícil interpretação
+        - ⚠ Treinamento demorado
+        - ⚠ Difícil interpretação
         
         ### 🚀 Próximos Passos
         
-        1. **Validação em Produção:** Testar o modelo em dados reais por 30 dias
-        2. **Monitoramento:** Implementar alertas para drift de dados
-        3. **Retreinamento:** Retreinar mensalmente com novos dados
-        4. **A/B Testing:** Comparar estratégias de intervenção
-        5. **Expansão:** Incluir dados externos (feriados, eventos, clima)
+        1. *Validação em Produção:* Testar o modelo em dados reais por 30 dias
+        2. *Monitoramento:* Implementar alertas para drift de dados
+        3. *Retreinamento:* Retreinar mensalmente com novos dados
+        4. *A/B Testing:* Comparar estratégias de intervenção
+        5. *Expansão:* Incluir dados externos (feriados, eventos, clima)
         """)
 
-def display_results(y_test, y_pred, y_pred_proba, training_time, model_name):
-    """Exibe resultados do modelo"""
-    st.markdown(f"### 📊 Resultados - {model_name}")
-    
-    col1, col2, col3, col4, col5 = st.columns(5)
-    
-    with col1:
-        st.metric("AUC", f"{roc_auc_score(y_test, y_pred_proba):.4f}")
-    with col2:
-        st.metric("F1-Score", f"{f1_score(y_test, y_pred):.4f
+# Executar aplicação
+if _name_ == "_main_":
+    main()
