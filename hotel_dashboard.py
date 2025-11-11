@@ -150,11 +150,7 @@ def display_results(y_test, y_pred, y_pred_proba, training_time, model_name):
     else:
         performance = "🔴 Regular"
     
-    st.info(f"""
-    **Performance:** {performance}
-    
-    O modelo alcançou um AUC de {auc_score:.4f}, indicando {"excelente" if auc_score > 0.85 else "boa" if auc_score > 0.75 else "regular"} capacidade de discriminação entre cancelamentos e não-cancelamentos.
-    """)
+    st.info(f"**Performance:** {performance}\n\nO modelo alcançou um AUC de {auc_score:.4f}.")
 
 def plot_roc_curve(y_test, y_pred_proba, model_name):
     """Plota a curva ROC"""
@@ -212,12 +208,12 @@ def plot_confusion_matrix(y_test, y_pred, model_name):
     # Análise da matriz
     tn, fp, fn, tp = cm.ravel()
     st.markdown(f"""
-    **Análise da Matriz de Confusão:**
-    - ✅ **Verdadeiros Negativos:** {tn:,} (Não cancelou e previsto corretamente)
-    - ❌ **Falsos Positivos:** {fp:,} (Não cancelou mas previsto como cancelamento)
-    - ❌ **Falsos Negativos:** {fn:,} (Cancelou mas previsto como não cancelamento)
-    - ✅ **Verdadeiros Positivos:** {tp:,} (Cancelou e previsto corretamente)
-    """)
+**Análise da Matriz de Confusão:**
+- ✅ **Verdadeiros Negativos:** {tn:,} (Não cancelou e previsto corretamente)
+- ❌ **Falsos Positivos:** {fp:,} (Não cancelou mas previsto como cancelamento)
+- ❌ **Falsos Negativos:** {fn:,} (Cancelou mas previsto como não cancelamento)
+- ✅ **Verdadeiros Positivos:** {tp:,} (Cancelou e previsto corretamente)
+""")
 
 # Função principal
 def main():
@@ -225,22 +221,22 @@ def main():
         st.info("👆 Por favor, faça upload do arquivo hotel_bookings.csv na barra lateral")
         st.markdown("### 📊 Sobre o Dashboard")
         st.markdown("""
-        Este dashboard permite:
-        - ✅ Escolher entre 3 algoritmos de ML
-        - ✅ Ajustar hiperparâmetros interativamente
-        - ✅ Visualizar curvas ROC comparativas
-        - ✅ Analisar métricas de desempenho
-        - ✅ Obter ranking automático dos modelos
-        """)
+Este dashboard permite:
+- ✅ Escolher entre 3 algoritmos de ML
+- ✅ Ajustar hiperparâmetros interativamente
+- ✅ Visualizar curvas ROC comparativas
+- ✅ Analisar métricas de desempenho
+- ✅ Obter ranking automático dos modelos
+""")
         
         st.markdown("### 📥 Como usar:")
         st.markdown("""
-        1. Baixe o dataset: [Hotel Booking Demand](https://www.kaggle.com/datasets/jessemostipak/hotel-booking-demand)
-        2. Faça upload do arquivo CSV
-        3. Escolha o algoritmo desejado
-        4. Ajuste os parâmetros
-        5. Clique em "Treinar Modelo"
-        """)
+1. Baixe o dataset: [Hotel Booking Demand](https://www.kaggle.com/datasets/jessemostipak/hotel-booking-demand)
+2. Faça upload do arquivo CSV
+3. Escolha o algoritmo desejado
+4. Ajuste os parâmetros
+5. Clique em "Treinar Modelo"
+""")
         return
     
     # Carregar dados
@@ -440,14 +436,12 @@ def main():
                 gamma = st.selectbox("Gamma", ['scale', 'auto', 0.001, 0.01, 0.1, 1])
                 degree = st.slider("Grau (Poly)", 2, 5, 3) if kernel == 'poly' else 3
             
-            # Aviso sobre tempo de treinamento
             st.warning("⚠ SVM pode levar vários minutos para treinar. Seja paciente!")
             
             if st.button("🚀 Treinar SVM", type="primary"):
-                with st.spinner("Treinando modelo... Isso pode levar alguns minutos."):
+                with st.spinner("Treinando modelo..."):
                     start_time = time.time()
                     
-                    # Usar subset para SVM (mais rápido)
                     sample_size = min(20000, len(X_train_final))
                     indices = np.random.choice(len(X_train_final), sample_size, replace=False)
                     
@@ -466,13 +460,8 @@ def main():
                     
                     training_time = time.time() - start_time
                     
-                    # Métricas
                     display_results(y_test, y_pred, y_pred_proba, training_time, f"SVM ({kernel})")
-                    
-                    # Curva ROC
                     plot_roc_curve(y_test, y_pred_proba, f"SVM ({kernel})")
-                    
-                    # Matriz de Confusão
                     plot_confusion_matrix(y_test, y_pred, f"SVM ({kernel})")
         
         else:  # Comparar Todos
@@ -485,7 +474,6 @@ def main():
                     progress_bar = st.progress(0)
                     
                     # Regressão Logística
-                    st.info("Treinando Regressão Logística...")
                     start = time.time()
                     lr = LogisticRegression(max_iter=1000, random_state=42)
                     lr.fit(X_train_final, y_train_final)
@@ -507,7 +495,6 @@ def main():
                     progress_bar.progress(33)
                     
                     # KNN
-                    st.info("Treinando KNN...")
                     start = time.time()
                     knn = KNeighborsClassifier(n_neighbors=5)
                     knn.fit(X_train_final, y_train_final)
@@ -529,7 +516,6 @@ def main():
                     progress_bar.progress(66)
                     
                     # SVM
-                    st.info("Treinando SVM...")
                     start = time.time()
                     sample_size = min(15000, len(X_train_final))
                     indices = np.random.choice(len(X_train_final), sample_size, replace=False)
@@ -554,27 +540,12 @@ def main():
                 
                 st.success("✅ Todos os modelos treinados!")
                 
-                # Tabela comparativa
                 df_results = pd.DataFrame(results)
                 df_display = df_results.drop(['y_pred', 'y_proba'], axis=1)
                 
                 st.markdown("### 📊 Tabela Comparativa")
-                st.dataframe(
-                    df_display.style.highlight_max(
-                        subset=['AUC', 'F1-Score', 'Precisão', 'Recall', 'Acurácia'],
-                        color='lightgreen'
-                    ).format({
-                        'AUC': '{:.4f}',
-                        'F1-Score': '{:.4f}',
-                        'Precisão': '{:.4f}',
-                        'Recall': '{:.4f}',
-                        'Acurácia': '{:.4f}',
-                        'Tempo (s)': '{:.2f}'
-                    }),
-                    use_container_width=True
-                )
+                st.dataframe(df_display, use_container_width=True)
                 
-                # Ranking
                 st.markdown("### 🏆 Ranking dos Modelos")
                 best_model_idx = df_results['AUC'].idxmax()
                 best_model = df_results.iloc[best_model_idx]
@@ -583,48 +554,41 @@ def main():
                 for idx, (i, row) in enumerate(df_display.sort_values('AUC', ascending=False).iterrows()):
                     medal = ['🥇', '🥈', '🥉'][idx]
                     with [col1, col2, col3][idx]:
-                        st.metric(
-                            f"{medal} {row['Modelo']}",
-                            f"AUC: {row['AUC']:.4f}",
-                            f"F1: {row['F1-Score']:.4f}"
-                        )
+                        st.metric(f"{medal} {row['Modelo']}", f"AUC: {row['AUC']:.4f}")
                 
-                # Curvas ROC comparativas
                 st.markdown("### 📈 Curvas ROC Comparativas")
                 fig = go.Figure()
                 
                 colors = ['#3498db', '#e74c3c', '#2ecc71']
                 for idx, result in enumerate(results):
                     fpr, tpr, _ = roc_curve(y_test, result['y_proba'])
-                    fig.add_trace(go.Scatter(
-                        x=fpr, y=tpr,
-                        name=f"{result['Modelo']} (AUC={result['AUC']:.4f})",
-                        line=dict(color=colors[idx], width=3)
-                    ))
+                    fig.add_trace(go.Scatter(x=fpr, y=tpr, name=f"{result['Modelo']}", line=dict(color=colors[idx], width=3)))
                 
-                fig.add_trace(go.Scatter(
-                    x=[0, 1], y=[0, 1],
-                    name='Baseline',
-                    line=dict(color='gray', width=2, dash='dash')
-                ))
-                
-                fig.update_layout(
-                    title='Curvas ROC - Comparação',
-                    xaxis_title='Taxa de Falsos Positivos',
-                    yaxis_title='Taxa de Verdadeiros Positivos',
-                    height=500,
-                    hovermode='closest'
-                )
-                
+                fig.add_trace(go.Scatter(x=[0, 1], y=[0, 1], name='Baseline', line=dict(color='gray', width=2, dash='dash')))
+                fig.update_layout(title='Curvas ROC', xaxis_title='FPR', yaxis_title='TPR', height=500)
                 st.plotly_chart(fig, use_container_width=True)
-                
-                # Interpretação automática
-                st.markdown("### 🤖 Interpretação Automática")
-                st.info(f"""
-                **Melhor Modelo: {best_model['Modelo']}**
-                
-                - 📊 **AUC:** {best_model['AUC']:.4f} - {"Excelente" if best_model['AUC'] > 0.85 else "Bom" if best_model['AUC'] > 0.75 else "Regular"} poder discriminatório
-                - 🎯 **F1-Score:** {best_model['F1-Score']:.4f} - Balanço entre precisão e recall
-                - ✅ **Precisão:** {best_model['Precisão']:.4f} - {best_model['Precisão']*100:.1f}% dos cancelamentos previstos são corretos
-                - 📍 **Recall:** {best_model['Recall']:.4f} - Detecta {best_model['Recall']*100:.1f}% dos cancelamentos reais
-                - ⏱ **Tempo:** {best_model['Tempo (s)']:.2f}s - {"Rápido" if best_model['Tempo (s)'] < 5 else "Moderado" if best_model['Tempo (s)'] < 30 else "Lento"}
+    
+    with tab3:
+        st.header("Análise Comparativa Detalhada")
+        st.info("Execute o modo 'Comparar Todos' na aba de Modelagem")
+    
+    with tab4:
+        st.header("💡 Insights e Recomendações")
+        st.markdown("""
+### 🎯 Principais Descobertas
+
+**Fatores de Maior Impacto:**
+- Lead Time alto aumenta cancelamentos
+- Depósito reduz cancelamentos
+- Histórico de cancelamentos é forte preditor
+
+### 📊 Recomendações
+
+**Para o Hotel:**
+- Implementar política de depósito
+- Monitorar reservas com lead time alto
+- Programa de fidelidade
+""")
+
+if __name__ == "__main__":
+    main()
