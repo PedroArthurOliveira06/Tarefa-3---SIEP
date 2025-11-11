@@ -58,7 +58,7 @@ st.markdown("""
 # Header
 st.title("🏨 Dashboard de Previsão de Cancelamentos")
 st.markdown("### Tarefa 3 - Modelagem com Machine Learning")
-st.markdown("*Aluno:* Pedro Arthur Santos Oliveira | *Matrícula:* 231036069")
+st.markdown("**Aluno:** Pedro Arthur Santos Oliveira | **Matrícula:** 231036069")
 st.markdown("---")
 
 # Sidebar
@@ -142,7 +142,6 @@ def display_results(y_test, y_pred, y_pred_proba, training_time, model_name):
     
     # Interpretação
     auc_score = roc_auc_score(y_test, y_pred_proba)
-    f1 = f1_score(y_test, y_pred)
     
     if auc_score > 0.85:
         performance = "🟢 Excelente"
@@ -152,7 +151,7 @@ def display_results(y_test, y_pred, y_pred_proba, training_time, model_name):
         performance = "🔴 Regular"
     
     st.info(f"""
-    *Performance:* {performance}
+    **Performance:** {performance}
     
     O modelo alcançou um AUC de {auc_score:.4f}, indicando {"excelente" if auc_score > 0.85 else "boa" if auc_score > 0.75 else "regular"} capacidade de discriminação entre cancelamentos e não-cancelamentos.
     """)
@@ -213,11 +212,11 @@ def plot_confusion_matrix(y_test, y_pred, model_name):
     # Análise da matriz
     tn, fp, fn, tp = cm.ravel()
     st.markdown(f"""
-    *Análise da Matriz de Confusão:*
-    - ✅ *Verdadeiros Negativos:* {tn:,} (Não cancelou e previsto corretamente)
-    - ❌ *Falsos Positivos:* {fp:,} (Não cancelou mas previsto como cancelamento)
-    - ❌ *Falsos Negativos:* {fn:,} (Cancelou mas previsto como não cancelamento)
-    - ✅ *Verdadeiros Positivos:* {tp:,} (Cancelou e previsto corretamente)
+    **Análise da Matriz de Confusão:**
+    - ✅ **Verdadeiros Negativos:** {tn:,} (Não cancelou e previsto corretamente)
+    - ❌ **Falsos Positivos:** {fp:,} (Não cancelou mas previsto como cancelamento)
+    - ❌ **Falsos Negativos:** {fn:,} (Cancelou mas previsto como não cancelamento)
+    - ✅ **Verdadeiros Positivos:** {tp:,} (Cancelou e previsto corretamente)
     """)
 
 # Função principal
@@ -622,99 +621,10 @@ def main():
                 # Interpretação automática
                 st.markdown("### 🤖 Interpretação Automática")
                 st.info(f"""
-                *Melhor Modelo: {best_model['Modelo']}*
+                **Melhor Modelo: {best_model['Modelo']}**
                 
-                - 📊 *AUC:* {best_model['AUC']:.4f} - {"Excelente" if best_model['AUC'] > 0.85 else "Bom" if best_model['AUC'] > 0.75 else "Regular"} poder discriminatório
-                - 🎯 *F1-Score:* {best_model['F1-Score']:.4f} - Balanço entre precisão e recall
-                - ✅ *Precisão:* {best_model['Precisão']:.4f} - {best_model['Precisão']*100:.1f}% dos cancelamentos previstos são corretos
-                - 📍 *Recall:* {best_model['Recall']:.4f} - Detecta {best_model['Recall']*100:.1f}% dos cancelamentos reais
-                - ⏱ *Tempo:* {best_model['Tempo (s)']:.2f}s - {"Rápido" if best_model['Tempo (s)'] < 5 else "Moderado" if best_model['Tempo (s)'] < 30 else "Lento"}
-                
-                *Recomendação:* Este modelo é ideal para implantação em produção devido ao seu {"excelente desempenho e eficiência" if best_model['AUC'] > 0.85 and best_model['Tempo (s)'] < 10 else "bom desempenho geral"}.
-                """)
-    
-    # TAB 3: Comparação Detalhada
-    with tab3:
-        st.header("Análise Comparativa Detalhada")
-        st.info("Execute o modo 'Comparar Todos' na aba de Modelagem para visualizar esta seção")
-    
-    # TAB 4: Insights
-    with tab4:
-        st.header("💡 Insights e Recomendações")
-        
-        st.markdown("""
-        ### 🎯 Principais Descobertas
-        
-        *1. Fatores de Maior Impacto no Cancelamento:*
-        - *Lead Time:* Reservas com antecedência > 180 dias têm 65% mais chance de cancelamento
-        - *Tipo de Depósito:* Reservas sem depósito têm 3x mais probabilidade de cancelamento
-        - *Tipo de Cliente:* Clientes transitórios cancelam 45% mais que contratos
-        - *Histórico:* Clientes com cancelamentos anteriores têm 5x mais chance de cancelar novamente
-        
-        ### 📊 Recomendações Operacionais
-        
-        *Para o Hotel:*
-        """)
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("""
-            *🎫 Política de Overbooking:*
-            - Implementar overbooking de 5-8% em períodos de alta sazonalidade
-            - Focar em reservas com lead time < 7 dias
-            - Priorizar segmentos corporativos
-            
-            *💰 Ofertas Direcionadas:*
-            - Desconto de 10-15% para clientes com alto risco
-            - Programa de fidelidade para reduzir cancelamentos
-            - Upgrade de quarto como incentivo
-            """)
-        
-        with col2:
-            st.markdown("""
-            *🔒 Políticas de Depósito:*
-            - Exigir depósito de 20% para lead time > 60 dias
-            - Depósito de 50% para lead time > 120 dias
-            - Política mais flexível para clientes corporativos
-            
-            *📧 Comunicação Proativa:*
-            - Email 7 dias antes da chegada
-            - SMS 48h antes para confirmação
-            - Oferta de cancelamento gratuito até 24h
-            """)
-        
-        st.markdown("""
-        ### 🎓 Análise dos Modelos
-        
-        *Regressão Logística:*
-        - ✅ Alta interpretabilidade
-        - ✅ Rápido treinamento
-        - ✅ Bom para identificar fatores de risco
-        - ⚠ Assume linearidade
-        
-        *KNN:*
-        - ✅ Captura padrões locais
-        - ✅ Não assume distribuição
-        - ⚠ Sensível a escala
-        - ⚠ Lento em produção
-        
-        *SVM:*
-        - ✅ Melhor performance geral
-        - ✅ Captura não-linearidades
-        - ✅ Robusto a outliers
-        - ⚠ Treinamento demorado
-        - ⚠ Difícil interpretação
-        
-        ### 🚀 Próximos Passos
-        
-        1. *Validação em Produção:* Testar o modelo em dados reais por 30 dias
-        2. *Monitoramento:* Implementar alertas para drift de dados
-        3. *Retreinamento:* Retreinar mensalmente com novos dados
-        4. *A/B Testing:* Comparar estratégias de intervenção
-        5. *Expansão:* Incluir dados externos (feriados, eventos, clima)
-        """)
-
-# Executar aplicação
-if _name_ == "_main_":
-    main()
+                - 📊 **AUC:** {best_model['AUC']:.4f} - {"Excelente" if best_model['AUC'] > 0.85 else "Bom" if best_model['AUC'] > 0.75 else "Regular"} poder discriminatório
+                - 🎯 **F1-Score:** {best_model['F1-Score']:.4f} - Balanço entre precisão e recall
+                - ✅ **Precisão:** {best_model['Precisão']:.4f} - {best_model['Precisão']*100:.1f}% dos cancelamentos previstos são corretos
+                - 📍 **Recall:** {best_model['Recall']:.4f} - Detecta {best_model['Recall']*100:.1f}% dos cancelamentos reais
+                - ⏱ **Tempo:** {best_model['Tempo (s)']:.2f}s - {"Rápido" if best_model['Tempo (s)'] < 5 else "Moderado" if best_model['Tempo (s)'] < 30 else "Lento"}
