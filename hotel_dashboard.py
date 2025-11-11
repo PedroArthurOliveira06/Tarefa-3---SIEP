@@ -66,14 +66,6 @@ with st.sidebar:
     st.image("https://via.placeholder.com/300x100/3498db/ffffff?text=UnB", use_container_width=True)
     st.header("⚙ Configurações")
     
-    # Upload de arquivo
-    st.subheader("📁 Upload do Dataset")
-    uploaded_file = st.file_uploader(
-        "Faça upload do hotel_bookings.csv",
-        type=['csv'],
-        help="Dataset disponível em: https://www.kaggle.com/datasets/jessemostipak/hotel-booking-demand"
-    )
-    
     st.markdown("---")
     
     # Escolha do algoritmo
@@ -84,13 +76,25 @@ with st.sidebar:
     )
     
     st.markdown("---")
+    st.info("📊 Dataset carregado automaticamente da fonte pública")
 
-# Cache para carregar dados
+# Cache para carregar dados da internet
 @st.cache_data
-def load_and_preprocess_data(file):
-    """Carrega e processa o dataset"""
-    df = pd.read_csv(file)
-    
+def load_data_from_url():
+    """Carrega o dataset diretamente da URL"""
+    try:
+        # URL do dataset no GitHub (repositório público com dados Kaggle)
+        url = "https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-02-11/hotels.csv"
+        
+        df = pd.read_csv(url)
+        return df, None
+    except Exception as e:
+        return None, str(e)
+
+# Cache para processar dados
+@st.cache_data
+def preprocess_data(df):
+    """Processa o dataset"""
     # Tratamento de valores faltantes
     df['children'].fillna(0, inplace=True)
     df['country'].fillna(df['country'].mode()[0], inplace=True)
@@ -217,31 +221,18 @@ def plot_confusion_matrix(y_test, y_pred, model_name):
 
 # Função principal
 def main():
-    if uploaded_file is None:
-        st.info("👆 Por favor, faça upload do arquivo hotel_bookings.csv na barra lateral")
-        st.markdown("### 📊 Sobre o Dashboard")
-        st.markdown("""
-Este dashboard permite:
-- ✅ Escolher entre 3 algoritmos de ML
-- ✅ Ajustar hiperparâmetros interativamente
-- ✅ Visualizar curvas ROC comparativas
-- ✅ Analisar métricas de desempenho
-- ✅ Obter ranking automático dos modelos
-""")
-        
-        st.markdown("### 📥 Como usar:")
-        st.markdown("""
-1. Baixe o dataset: [Hotel Booking Demand](https://www.kaggle.com/datasets/jessemostipak/hotel-booking-demand)
-2. Faça upload do arquivo CSV
-3. Escolha o algoritmo desejado
-4. Ajuste os parâmetros
-5. Clique em "Treinar Modelo"
-""")
+    # Carregar dados automaticamente
+    with st.spinner("🔄 Carregando dataset da internet..."):
+        df, error = load_data_from_url()
+    
+    if df is None:
+        st.error(f"❌ Erro ao carregar dataset: {error}")
+        st.info("💡 Verifique sua conexão com a internet ou tente novamente mais tarde.")
         return
     
-    # Carregar dados
-    with st.spinner("Carregando dataset..."):
-        df = load_and_preprocess_data(uploaded_file)
+    # Preprocessar dados
+    with st.spinner("⚙ Processando dados..."):
+        df = preprocess_data(df)
     
     st.success(f"✅ Dataset carregado: {df.shape[0]:,} linhas e {df.shape[1]} colunas")
     
@@ -570,7 +561,7 @@ Este dashboard permite:
     
     with tab3:
         st.header("Análise Comparativa Detalhada")
-        st.info("Execute o modo 'Comparar Todos' na aba de Modelagem")
+        st.info("Execute o modo 'Comparar Todos' na aba de Modelagem para visualizar análises comparativas.")
     
     with tab4:
         st.header("💡 Insights e Recomendações")
@@ -587,7 +578,8 @@ Este dashboard permite:
 **Para o Hotel:**
 - Implementar política de depósito
 - Monitorar reservas com lead time alto
-- Programa de fidelidade
+- Programa de fidelidade para reduzir cancelamentos
+- Sistema de alertas para reservas de alto risco
 """)
 
 if __name__ == "__main__":
